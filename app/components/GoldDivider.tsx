@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useInView } from "./useInView";
 
 interface GoldDividerProps {
@@ -23,7 +24,7 @@ export default function GoldDivider({ className = "", width = 300 }: GoldDivider
         <path
           className="gd-line"
           d={`M8 12 L${half - gap} 12`}
-          style={{ "--gd-len": half - gap - 8 } as React.CSSProperties}
+          style={{ "--gd-len": half - gap - 8 } as CSSProperties}
         />
         {/* center diamond */}
         <path
@@ -34,7 +35,7 @@ export default function GoldDivider({ className = "", width = 300 }: GoldDivider
         <path
           className="gd-line"
           d={`M${half + gap} 12 L${width - 8} 12`}
-          style={{ "--gd-len": width - 8 - half - gap } as React.CSSProperties}
+          style={{ "--gd-len": width - 8 - half - gap } as CSSProperties}
         />
       </svg>
     </div>

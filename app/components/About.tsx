@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useState } from "react";
 import { useReveal } from "./useReveal";
 import GoldDivider from "./GoldDivider";
+import Stats from "./Stats";
 
 const dishes = [
   {
@@ -79,7 +81,7 @@ export default function About() {
                   {
                     zIndex: DECK_SIZE - i,
                     "--i": i,
-                  } as React.CSSProperties
+                  } as CSSProperties
                 }
                 aria-hidden={i !== 0}
               >
@@ -101,6 +103,7 @@ export default function About() {
           })}
         </div>
       </div>
+      <Stats />
     </section>
   );
 }

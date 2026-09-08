@@ -35,17 +35,32 @@ export default function Footer() {
           <h4>Follow</h4>
           <ul className="footer-social">
             <li>
-              <a href="#" aria-label="Instagram">
+              <a
+                href="https://www.instagram.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram (opens in a new tab)"
+              >
                 Instagram
               </a>
             </li>
             <li>
-              <a href="#" aria-label="Facebook">
+              <a
+                href="https://www.facebook.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook (opens in a new tab)"
+              >
                 Facebook
               </a>
             </li>
             <li>
-              <a href="#" aria-label="TikTok">
+              <a
+                href="https://www.tiktok.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok (opens in a new tab)"
+              >
                 TikTok
               </a>
             </li>

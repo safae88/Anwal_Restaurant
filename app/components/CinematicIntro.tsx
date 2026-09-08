@@ -11,7 +11,8 @@ export default function CinematicIntro() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setDone(true), 1600);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = setTimeout(() => setDone(true), reduced ? 0 : 1600);
     return () => clearTimeout(t);
   }, []);
 

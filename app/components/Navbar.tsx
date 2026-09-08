@@ -27,6 +27,9 @@ export default function Navbar() {
           Anwal
         </a>
         <div className="nav-links">
+          <a href="#about" className="nav-link">
+            Anwal&apos;s Story
+          </a>
           <a href="#menu" className="nav-link">
             Menu
           </a>
@@ -35,6 +38,9 @@ export default function Navbar() {
           </a>
           <a href="#reserve" className="nav-link">
             Reserve
+          </a>
+          <a href="#contact" className="nav-link">
+            Contact
           </a>
         </div>
         <button
@@ -53,6 +59,9 @@ export default function Navbar() {
         <a href="#top" onClick={() => setOpen(false)}>
           Home
         </a>
+        <a href="#about" onClick={() => setOpen(false)}>
+          Anwal&apos;s Story
+        </a>
         <a href="#menu" onClick={() => setOpen(false)}>
           Menu
         </a>
@@ -61,6 +70,9 @@ export default function Navbar() {
         </a>
         <a href="#reserve" onClick={() => setOpen(false)}>
           Reserve
+        </a>
+        <a href="#contact" onClick={() => setOpen(false)}>
+          Contact
         </a>
       </div>
     </>

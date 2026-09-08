@@ -3,11 +3,13 @@
 import { useEffect, useRef } from "react";
 
 const POSTER = "/images/food1.jpg";
+const WORDMARK = ["A", "N", "W", "A", "L"];
 
 /**
- * Minimal scroll-linked parallax hook.
- * Attaches a passive rAF-backed scroll listener that moves the element
- * slightly slower than the viewport — only when NOT reduced-motion.
+ * Scroll-linked parallax hook with eased follow-through.
+ * A passive scroll listener updates a *target* offset; a rAF loop
+ * eases the actual transform toward it, so the motion stays silky
+ * (no stepping) and fully GPU-friendly — only when NOT reduced-motion.
  */
 function useParallax<T extends HTMLElement>(speed: number) {
   const ref = useRef<T>(null);
@@ -18,17 +20,24 @@ function useParallax<T extends HTMLElement>(speed: number) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let raf = 0;
+    let current = 0;
+    let target = 0;
 
-    const tick = () => {
+    const loop = () => {
       raf = 0;
-      const rect = el.getBoundingClientRect();
-      const mid = rect.top + rect.height / 2;
-      const offset = (mid - window.innerHeight / 2) * -speed;
-      el.style.transform = `translate3d(0, ${offset}px, 0)`;
+      current += (target - current) * 0.1;
+      if (Math.abs(target - current) < 0.01) current = target;
+      el.style.transform = `translate3d(0, ${current}px, 0)`;
+      if (Math.abs(target - current) > 0.01) {
+        raf = requestAnimationFrame(loop);
+      }
     };
 
     const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(tick);
+      const rect = el.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      target = (mid - window.innerHeight / 2) * -speed;
+      if (!raf) raf = requestAnimationFrame(loop);
     };
 
     onScroll();
@@ -72,17 +81,21 @@ export default function Hero() {
 
       <div className="hero-overlay" />
 
-      {/* Hero text */}
+      {/* Hero wordmark — the emotional centerpiece */}
       <div className="hero-content">
-        <p className="eyebrow hero-eyebrow">Anwal · Est. 2018</p>
-        <h1 className="hero-tagline serif">
-          A different way to <em>experience</em> dining
+        <p className="eyebrow hero-eyebrow">Fine Dining &amp; Open Fire</p>
+        <h1 className="hero-wordmark" aria-label="Anwal">
+          {WORDMARK.map((letter, i) => (
+            <span
+              key={i}
+              className="w-letter"
+              style={{ animationDelay: `${0.45 + i * 0.09}s` }}
+            >
+              {letter}
+            </span>
+          ))}
         </h1>
-        <div className="hero-cta">
-          <a href="#menu" className="btn btn-gold">
-            Explore the Menu
-          </a>
-        </div>
+        <div className="hero-wordmark-underline" aria-hidden="true" />
       </div>
 
       <a href="#about" className="scroll-cue" aria-label="Scroll down">
