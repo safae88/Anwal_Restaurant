@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 const images = [
@@ -16,39 +17,44 @@ const images = [
   "/images/food11.jpg",
 ];
 
+const DECK_SIZE = 6;
+
 export default function Gallery() {
   const [top, setTop] = useState(0);
   const [ratio, setRatio] = useState(4 / 3);
 
-  function popCard() {
-    setTop((t) => (t + 1) % images.length);
-  }
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const el = e.currentTarget;
+    const nextRatio = el.naturalWidth / el.naturalHeight;
 
-  const deckSize = 6;
+    if (nextRatio > 0 && Math.abs(nextRatio - ratio) > 0.01) {
+      setRatio(nextRatio);
+    }
+  };
+
+  const advance = () => {
+    setTop((t) => (t + 1) % images.length);
+  };
 
   return (
     <div className="stack" style={{ aspectRatio: ratio }}>
-      {Array.from({ length: deckSize }, (_, i) => {
+      {Array.from({ length: DECK_SIZE }, (_, i) => {
         const src = images[(top + i) % images.length];
+
         return (
           <div
             key={i}
-            className={`stack-card ${i === 0 ? "top-card" : ""}`}
-            style={{ zIndex: deckSize - i, "--i": i } as React.CSSProperties}
-            onClick={i === 0 ? popCard : undefined}
+            className="stack-card"
+            style={{ zIndex: DECK_SIZE - i, "--i": i } as React.CSSProperties}
+            onClick={i === 0 ? advance : undefined}
           >
-            <img
+            <Image
               src={src}
+              fill
+              sizes="(min-width: 768px) 420px, 100vw"
               alt={`Dish ${top + i + 1}`}
-              onLoad={
-                i === 0
-                  ? (e) => {
-                      const el = e.currentTarget;
-                      const r = el.naturalWidth / el.naturalHeight;
-                      if (r > 0 && Math.abs(r - ratio) > 0.01) setRatio(r);
-                    }
-                  : undefined
-              }
+              className="stack-card-img"
+              onLoad={i === 0 ? handleImageLoad : undefined}
             />
           </div>
         );
