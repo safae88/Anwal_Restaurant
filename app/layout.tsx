@@ -9,8 +9,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Anwal",
-  description: "A different way to experience dining",
+  title: "Anwal — A different way to experience dining",
+  description:
+    "A cinematic, intimate dining experience. Warm, moody, unhurried — crafted courses served in a space that feels like home, but never ordinary.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

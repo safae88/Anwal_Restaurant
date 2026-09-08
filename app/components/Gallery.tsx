@@ -1,64 +1,48 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useReveal } from "./useReveal";
+import GoldDivider from "./GoldDivider";
 
-const images = [
-  "/images/food1.jpg",
-  "/images/food2.jpg",
-  "/images/food3.jpg",
-  "/images/food4.jpg",
-  "/images/food5.jpg",
-  "/images/food6.jpg",
-  "/images/food7.jpg",
-  "/images/food8.jpg",
-  "/images/food9.jpg",
-  "/images/food10.jpg",
-  "/images/food11.jpg",
+const shots = [
+  { src: "/images/food1.jpg", alt: "Plated main course on dark stoneware" },
+  { src: "/images/food2.jpg", alt: "Hand-pulled tagliatelle being plated" },
+  { src: "/images/food3.jpg", alt: "Charred octopus with smoked paprika" },
+  { src: "/images/food4.jpg", alt: "Forest mushroom tart garnished with thyme" },
+  { src: "/images/food5.jpg", alt: "Seared scallops with burnt butter" },
+  { src: "/images/food6.jpg", alt: "Molten chocolate dessert with caramel" },
+  { src: "/images/food7.jpg", alt: "Interior of the dining room at dusk" },
+  { src: "/images/food8.jpg", alt: "Chef finishing a dish at the pass" },
+  { src: "/images/food9.jpg", alt: "Cocktail being poured over ice" },
+  { src: "/images/food10.jpg", alt: "Table laid for service with candlelight" },
+  { src: "/images/food11.jpg", alt: "Amber glow across the bar" },
 ];
 
-const DECK_SIZE = 6;
-
 export default function Gallery() {
-  const [top, setTop] = useState(0);
-  const [ratio, setRatio] = useState(4 / 3);
-
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const el = e.currentTarget;
-    const nextRatio = el.naturalWidth / el.naturalHeight;
-
-    if (nextRatio > 0 && Math.abs(nextRatio - ratio) > 0.01) {
-      setRatio(nextRatio);
-    }
-  };
-
-  const advance = () => {
-    setTop((t) => (t + 1) % images.length);
-  };
+  const ref = useReveal<HTMLDivElement>();
 
   return (
-    <div className="stack" style={{ aspectRatio: ratio }}>
-      {Array.from({ length: DECK_SIZE }, (_, i) => {
-        const src = images[(top + i) % images.length];
-
-        return (
-          <div
-            key={i}
-            className="stack-card"
-            style={{ zIndex: DECK_SIZE - i, "--i": i } as React.CSSProperties}
-            onClick={i === 0 ? advance : undefined}
-          >
+    <section className="section gallery" id="gallery" ref={ref}>
+      <div className="gallery-head reveal">
+        <p className="eyebrow">The Ambiance</p>
+        <h2>Step inside</h2>
+        <div className="gallery-head-divider">
+          <GoldDivider width={200} />
+        </div>
+      </div>
+      <div className="gallery-grid">
+        {shots.map((shot, i) => (
+          <figure className="gallery-item reveal" key={shot.src + i}>
             <Image
-              src={src}
-              fill
-              sizes="(min-width: 768px) 420px, 100vw"
-              alt={`Dish ${top + i + 1}`}
-              className="stack-card-img"
-              onLoad={i === 0 ? handleImageLoad : undefined}
+              src={shot.src}
+              alt={shot.alt}
+              width={1680}
+              height={944}
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             />
-          </div>
-        );
-      })}
-    </div>
+          </figure>
+        ))}
+      </div>
+    </section>
   );
 }
