@@ -83,18 +83,18 @@ export default function Hero() {
 
       {/* Hero wordmark — the emotional centerpiece */}
       <div className="hero-content">
-        <p className="eyebrow hero-eyebrow">Fine Dining &amp; Open Fire</p>
         <h1 className="hero-wordmark" aria-label="Anwal">
           {WORDMARK.map((letter, i) => (
             <span
-              key={i}
-              className="w-letter"
-              style={{ animationDelay: `${0.45 + i * 0.09}s` }}
+            key={i}
+            className="w-letter"
+            style={{ animationDelay: `${0.45 + i * 0.09}s` }}
             >
               {letter}
             </span>
           ))}
         </h1>
+          <p className="eyebrow hero-eyebrow">Restaurant</p>
         <div className="hero-wordmark-underline" aria-hidden="true" />
       </div>
 

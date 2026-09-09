@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { sampleBezier } from "@/lib/ease";
+import { SECTIONS } from "@/lib/sections";
 
 /**
  * ScrollThread — the site's signature scroll interaction.
@@ -30,9 +31,9 @@ export default function ScrollThread() {
     const head = headRef.current;
     if (!fill || !head) return;
 
-    const nodes = ["#about", "#menu", "#gallery", "#reserve"]
-      .map((sel) => document.querySelector(sel))
-      .filter((el): el is HTMLElement => el instanceof HTMLElement);
+    const nodes = SECTIONS.map((s) =>
+      document.getElementById(s.id)
+    ).filter((el): el is HTMLElement => el instanceof HTMLElement);
 
     let raf = 0;
     let progress = 0;

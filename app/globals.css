@@ -963,6 +963,11 @@ button:focus-visible {
   margin: 0 auto;
 }
 
+.stack-deck {
+  position: absolute;
+  inset: 0;
+}
+
 .stack-card {
   position: absolute;
   top: 0;
@@ -981,12 +986,56 @@ button:focus-visible {
   transition: transform 0.55s var(--ease), box-shadow 0.6s var(--ease);
 }
 
-.stack-card:hover {
+.stack-card:not(.stack-front, .stack-leave):hover {
   transform: translate(0, -6px) scale(1.01);
   box-shadow: calc(var(--depth-x, 0) * 1.4px)
       calc(22px + var(--depth-y, 0) * 1.4px) 44px rgba(0, 0, 0, 0.55),
     calc(var(--depth-x, 0) * 0.5px) calc(8px + var(--depth-y, 0) * 0.5px)
       14px rgba(0, 0, 0, 0.26);
+}
+
+/* The front of the stack is a clean, static plane — no cascade offset. */
+.stack-card.stack-front {
+  transform: none;
+  z-index: 30;
+}
+
+.stack-card.stack-front:hover {
+  transform: translate(0, -6px) scale(1.01);
+}
+
+/* A card lifted off the stack: eases up, tilts slightly, and dissolves. */
+.stack-card.stack-leave {
+  transform: none;
+  z-index: 40;
+  pointer-events: none;
+  animation: stackLeave 0.48s var(--ease) forwards;
+}
+
+@keyframes stackLeave {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(26px, -12px) rotate(1.2deg) scale(0.93);
+    filter: blur(7px);
+  }
+}
+
+/* The new front settles up from beneath while the old one lifts away. */
+.stack-card.stack-front .stack-card-img {
+  animation: stackReveal 0.48s var(--ease);
+}
+
+@keyframes stackReveal {
+  from {
+    opacity: 0.78;
+    transform: scale(0.93) translateY(16px);
+    filter: blur(5px);
+  }
 }
 
 .stack-card .stack-card-img {
@@ -1011,7 +1060,7 @@ button:focus-visible {
   transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
 }
 
-.stack-card:first-child .stack-tile {
+.stack-card.stack-front .stack-tile {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1297,6 +1346,8 @@ button:focus-visible {
 }
 
 .quote-bg .quote-bg-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   filter: saturate(0.82) brightness(0.72) blur(2px);
   transform: scale(1.04);
@@ -1401,17 +1452,64 @@ button:focus-visible {
   font-weight: 300;
 }
 
-.gallery-grid {
-  columns: 3;
-  column-gap: 1.4rem;
-  max-width: 1280px;
-  margin: 0 auto;
+.gallery-strip {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(1rem, 2vw, 1.8rem);
+  overflow-x: auto;
+  padding: 1.2rem max(1.5rem, calc((100vw - 1280px) / 2 + 1.5rem)) 2.6rem;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 clamp(1.4rem, 3vw, 3rem),
+    #000 calc(100% - clamp(1.4rem, 3vw, 3rem)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 clamp(1.4rem, 3vw, 3rem),
+    #000 calc(100% - clamp(1.4rem, 3vw, 3rem)),
+    transparent 100%
+  );
+}
+
+.gallery-strip:active {
+  cursor: grabbing;
+}
+
+.gallery-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* Thin progress line that fills as the strip travels — a quiet cue that
+   there is more to see beyond the fade. */
+.gallery-cue {
+  position: relative;
+  height: 1px;
+  width: min(72%, 860px);
+  margin: calc(-1.2rem) auto 0;
+  background: rgba(244, 239, 230, 0.1);
+  overflow: hidden;
+}
+
+.gallery-cue-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: var(--gold);
 }
 
 .gallery-item {
   position: relative;
-  margin-bottom: 1.4rem;
-  break-inside: avoid;
+  flex: 0 0 clamp(260px, 30vw, 430px);
+  aspect-ratio: 16 / 9;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
@@ -1419,6 +1517,7 @@ button:focus-visible {
   box-shadow: calc(var(--depth-x, 0) * 0.7px)
     calc(12px + var(--depth-y, 0) * 0.7px) 26px rgba(0, 0, 0, 0.42);
   transition: box-shadow 0.6s var(--ease);
+  scroll-snap-align: start;
 }
 
 .gallery-item img {
@@ -1493,15 +1592,195 @@ button:focus-visible {
 }
 
 @media (max-width: 1024px) {
-  .gallery-grid {
-    columns: 2;
+  .gallery-strip {
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 clamp(1.2rem, 3vw, 2rem),
+      #000 calc(100% - clamp(1.2rem, 3vw, 2rem)),
+      transparent 100%
+    );
+  }
+  .gallery-item {
+    flex-basis: clamp(260px, 52vw, 430px);
   }
 }
 
 @media (max-width: 640px) {
-  .gallery-grid {
-    columns: 1;
+  .gallery-item {
+    flex-basis: 78vw;
   }
+}
+
+/* =============================================================
+   FOOD AS ART — the site's reverent interlude
+   ============================================================= */
+
+.art {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 0;
+  background:
+    radial-gradient(70% 60% at 50% 44%, rgba(30, 22, 8, 0.5), transparent 66%),
+    linear-gradient(170deg, #0d0d0d 0%, #0f110d 44%, #110f0b 72%, #0d0d0d 100%);
+}
+
+/* Warm atmospheric glow — breathes subliminally behind everything. */
+.art::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    ellipse 52% 48% at 50% 44%,
+    rgba(201, 162, 75, 0.07),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 1.6s var(--ease);
+  pointer-events: none;
+}
+
+.art.inview::before {
+  opacity: 1;
+  animation: glowPulse 7s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Visible film grain over the full section. */
+.art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+}
+
+.art-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6rem clamp(1.5rem, 6vw, 6rem) 7rem;
+  text-align: center;
+}
+
+.art-eyebrow {
+  margin: 0 0 clamp(2.8rem, 6vw, 4.2rem);
+  font-size: 0.72rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgba(201, 162, 75, 0.7);
+}
+
+/* The painting and its warm portrait-bloom behind it. */
+.art-stage {
+  position: relative;
+  width: min(76vw, 560px);
+  aspect-ratio: 0.812;
+  margin: 0 auto clamp(4.2rem, 9vw, 7rem);
+}
+
+/* Warm bloom radiating softly from behind the painting — almost
+   invisible until the section arrives, then breathes into a living glow. */
+.art-bloom {
+  position: absolute;
+  inset: -48%;
+  background: radial-gradient(
+    ellipse 46% 42% at 50% 46%,
+    rgba(220, 165, 60, 0.15),
+    rgba(160, 100, 30, 0.04) 58%,
+    transparent 78%
+  );
+  filter: blur(50px);
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 2s var(--ease), transform 2.6s var(--ease);
+  pointer-events: none;
+}
+
+.art.inview .art-bloom {
+  opacity: 1;
+  transform: scale(1);
+  animation: artBreathe 55s ease-in-out infinite;
+}
+
+@keyframes artBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+/* The generous mask on the picture element — organic, with a long
+   dissipation so no rectangle survives anywhere on the box. */
+.art-img {
+  -webkit-mask-image: radial-gradient(
+    ellipse 58% 62% at 50% 46%,
+    #000 30%,
+    rgba(0, 0, 0, 0.9) 46%,
+    rgba(0, 0, 0, 0.4) 60%,
+    transparent 74%
+  );
+  mask-image: radial-gradient(
+    ellipse 58% 62% at 50% 46%,
+    #000 30%,
+    rgba(0, 0, 0, 0.9) 46%,
+    rgba(0, 0, 0, 0.4) 60%,
+    transparent 74%
+  );
+  -webkit-mask-mode: match-source;
+  mask-mode: match-source;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.08) contrast(1.04);
+  animation: artBreathe 55s ease-in-out infinite;
+}
+
+.art-story {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.art-story h2 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.8rem, 4.4vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 2.2rem;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+}
+
+.art-passage {
+  margin: 1.6rem 0;
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.art-credit {
+  margin-top: 3.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(201, 162, 75, 0.55);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 1.2s var(--ease) 0.7s, transform 1.4s var(--ease) 0.7s;
+}
+
+.art.inview .art-credit {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* =============================================================
@@ -2372,6 +2651,12 @@ button:focus-visible {
   .quote-bg .quote-bg-img {
     filter: brightness(0.72);
   }
+
+  .art::before { opacity: 1 !important; animation: none !important; }
+  .art::after  { display: none !important; }
+  .art-bloom   { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .art-img     { animation: none !important; }
+  .art-credit  { opacity: 1 !important; transform: none !important; transition: none !important; }
 
   .gold-divider .gd-line,
   .gold-divider .gd-dot {

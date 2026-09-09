@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useReveal } from "./useReveal";
 import GoldDivider from "./GoldDivider";
 import Stats from "./Stats";
+
+const SWAP_MS = 480;
 
 const dishes = [
   {
@@ -43,11 +45,25 @@ const dishes = [
 const DECK_SIZE = 5;
 
 export default function About() {
-  const [top, setTop] = useState(0);
+  const [front, setFront] = useState(0);
+  const [prev, setPrev] = useState<number | null>(null);
+  const busy = useRef(false);
   const ref = useReveal<HTMLDivElement>();
 
   const advance = () => {
-    setTop((t) => (t + 1) % dishes.length);
+    if (busy.current) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduce.matches) {
+      setFront((front + 1) % dishes.length);
+      return;
+    }
+    busy.current = true;
+    setPrev(front);
+    setFront((front + 1) % dishes.length);
+    window.setTimeout(() => {
+      setPrev(null);
+      busy.current = false;
+    }, SWAP_MS);
   };
 
   return (
@@ -71,36 +87,51 @@ export default function About() {
         </div>
 
         <div className="stack reveal" onClick={advance}>
-          {Array.from({ length: DECK_SIZE }, (_, i) => {
-            const dish = dishes[(top + i) % dishes.length];
-            return (
-              <div
-                key={i}
-                className="stack-card"
-                style={
-                  {
-                    zIndex: DECK_SIZE - i,
-                    "--i": i,
-                  } as CSSProperties
-                }
-                aria-hidden={i !== 0}
-              >
-                <Image
-                  src={dish.src}
-                  fill
-                  sizes="(min-width: 900px) 470px, 100vw"
-                  alt={i === 0 ? dish.name : ""}
-                  className="stack-card-img"
-                />
-                {i === 0 && (
-                  <div className="stack-tile">
-                    <h3>{dish.name}</h3>
-                    <p>{dish.note}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <div className="stack-deck" aria-hidden="true">
+            {Array.from({ length: DECK_SIZE - 1 }, (_, i) => {
+              const dish = dishes[(front + 1 + i) % dishes.length];
+              return (
+                <div
+                  key={i}
+                  className="stack-card"
+                  style={{ "--i": i + 1 } as CSSProperties}
+                >
+                  <Image
+                    src={dish.src}
+                    fill
+                    sizes="(min-width: 900px) 470px, 100vw"
+                    alt=""
+                    className="stack-card-img"
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="stack-card stack-front">
+            <Image
+              key={front}
+              src={dishes[front].src}
+              fill
+              sizes="(min-width: 900px) 470px, 100vw"
+              alt={dishes[front].name}
+              className="stack-card-img"
+            />
+            <div className="stack-tile">
+              <h3>{dishes[front].name}</h3>
+              <p>{dishes[front].note}</p>
+            </div>
+          </div>
+          {prev !== null && (
+            <div className="stack-card stack-leave" key={prev} aria-hidden="true">
+              <Image
+                src={dishes[prev].src}
+                fill
+                sizes="(min-width: 900px) 470px, 100vw"
+                alt=""
+                className="stack-card-img"
+              />
+            </div>
+          )}
         </div>
       </div>
       <Stats />

@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useReveal } from "./useReveal";
 import GoldDivider from "./GoldDivider";
 import GalleryLightbox, { type GalleryShot } from "./GalleryLightbox";
+
+const DRAG_SLACK = 5;
 
 const shots: GalleryShot[] = [
   {
@@ -88,6 +90,10 @@ const shots: GalleryShot[] = [
 
 export default function Gallery() {
   const ref = useReveal<HTMLElement>();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLSpanElement>(null);
+  const drag = useRef({ down: false, x: 0, left: 0, moved: false });
+  const guard = useRef(false);
   const [active, setActive] = useState<number | null>(null);
   const [closing, setClosing] = useState(false);
 
@@ -121,6 +127,70 @@ export default function Gallery() {
     return () => window.removeEventListener("keydown", onKey);
   }, [active, closeLightbox]);
 
+  /* Turn vertical wheel input into horizontal travel while the strip is
+     hovered, and only when there is somewhere left to go. */
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const onWheel = (e: WheelEvent) => {
+      if (track.scrollWidth <= track.clientWidth) return;
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        track.scrollLeft += e.deltaY;
+      }
+    };
+    track.addEventListener("wheel", onWheel, { passive: false });
+    return () => track.removeEventListener("wheel", onWheel);
+  }, []);
+
+  /* Thin gold progress line beneath the strip. */
+  const updateFill = useCallback(() => {
+    const track = trackRef.current;
+    const fill = fillRef.current;
+    if (!track || !fill) return;
+    const max = track.scrollWidth - track.clientWidth;
+    const p = max <= 0 ? 0 : Math.min(1, track.scrollLeft / max);
+    fill.style.transform = `scaleX(${p})`;
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const onScroll = () => updateFill();
+    track.addEventListener("scroll", onScroll, { passive: true });
+    updateFill();
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [updateFill]);
+
+  /* Click-and-drag on desktop; native swipe on touch. */
+  const startDrag = (e: React.PointerEvent) => {
+    const track = trackRef.current;
+    if (!track || e.pointerType !== "mouse") return;
+    drag.current = { down: true, x: e.clientX, left: track.scrollLeft, moved: false };
+  };
+
+  const moveDrag = (e: React.PointerEvent) => {
+    const d = drag.current;
+    const track = trackRef.current;
+    if (!d.down || !track) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > DRAG_SLACK) d.moved = true;
+    track.scrollLeft = d.left - dx;
+  };
+
+  const endDrag = () => {
+    if (drag.current.moved) guard.current = true;
+    drag.current.down = false;
+  };
+
+  const handleItemClick = (i: number) => {
+    if (guard.current) {
+      guard.current = false;
+      return;
+    }
+    openLightbox(i);
+  };
+
   return (
     <>
       <section className="section gallery" id="gallery" ref={ref}>
@@ -131,17 +201,24 @@ export default function Gallery() {
             <GoldDivider width={200} />
           </div>
         </div>
-        <div className="gallery-grid">
+        <div
+          className="gallery-strip reveal"
+          ref={trackRef}
+          onPointerDown={startDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+          onPointerCancel={endDrag}
+        >
           {shots.map((shot, i) => (
             <figure
-              className="gallery-item reveal"
+              className="gallery-item"
               key={shot.src + i}
-              style={{ transitionDelay: `${(i % 3) * 90}ms` }}
               role="button"
               tabIndex={0}
               aria-haspopup="dialog"
               aria-label={`View preparation for ${shot.name}`}
-              onClick={() => openLightbox(i)}
+              onClick={() => handleItemClick(i)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -154,11 +231,14 @@ export default function Gallery() {
                 alt={shot.alt}
                 width={1680}
                 height={944}
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                sizes="(min-width: 1024px) 430px, (min-width: 640px) 560px, 78vw"
               />
               <span className="gallery-hint">View preparation</span>
             </figure>
           ))}
+        </div>
+        <div className="gallery-cue" aria-hidden="true">
+          <span className="gallery-cue-fill" ref={fillRef} />
         </div>
       </section>
       {active !== null && (

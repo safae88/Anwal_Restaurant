@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const SECTIONS = [
-  { id: "about", label: "About" },
-  { id: "menu", label: "Menu" },
-  { id: "gallery", label: "Gallery" },
-  { id: "reserve", label: "Reserve" },
-];
+import { SECTIONS } from "@/lib/sections";
 
 /**
  * SectionNav — a slim right-edge indicator of where you are in the
